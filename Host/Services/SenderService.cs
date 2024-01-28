@@ -28,22 +28,22 @@ namespace Host.Services
 
         private void InitTheard()
         {
-            
-                _threadSendImg = new(() =>
+
+            _threadSendImg = new(() =>
+            {
+                if (IpClient != null)
                 {
-                    if (IpClient != null)
-                    {
-                        SendingImg(IPAddress.Parse(IpClient));
-                    }
-                    else
-                    {
-                        throw new Exception("Ip клиента не было предоставлено.");
-                    }
-                })
+                    SendingImg(IPAddress.Parse(IpClient));
+                }
+                else
                 {
-                    IsBackground = true
-                };
-            
+                    throw new Exception("Ip клиента не было предоставлено.");
+                }
+            })
+            {
+                IsBackground = true
+            };
+
         }
 
         private void SendingImg(IPAddress ipHost, int port = 8889)
@@ -58,9 +58,8 @@ namespace Host.Services
                     var dto = GetDataAndSize(i);
                     var data = JsonConvert.SerializeObject(dto);
                     var buffer = Encoding.UTF8.GetBytes(data);
-
                     _socket.SendTo(buffer, ip);
-
+ 
                 }
 
             }
@@ -95,9 +94,7 @@ namespace Host.Services
                 lock (_lock)
                 {
                     Cansel = true;
-                    _socket.DisconnectAsync(true);
-                    _socket.Close();
-
+                    
                 }
             }
 
@@ -116,7 +113,7 @@ namespace Host.Services
 
         private static Dto GetDataAndSize(int i)
         {
-            
+
             MemoryStream ms = new();
             var path = $"img/{i}/{i}-0000.jpg";
             Bitmap bmp = new(path);
