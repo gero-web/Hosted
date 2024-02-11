@@ -13,6 +13,7 @@ namespace AdminEmulator
         Socket serv { get; set; }
         Socket client { get; set; }
         private object _lock = new object();
+
         public bool IsCansel { get; private set; } = false;
 
         public Form1()
@@ -44,11 +45,12 @@ namespace AdminEmulator
             {
                 lock (_lock)
                 {
+                    answer = 0;
                     IsCansel = false;
+                    Thread thread = new(() => RunLoopImges());
+                    thread.IsBackground = true;
+                    thread.Start();
                 }
-                Thread thread = new(() => RunLoopImges());
-                thread.IsBackground = true;
-                thread.Start();
             }
             else
             {
@@ -74,24 +76,28 @@ namespace AdminEmulator
 
         private void RunLoopImges()
         {
+
             while (!IsCansel)
             {
-                byte[] sizeBytes = new byte[1024 * 100];
-
-                client.Receive(sizeBytes);
-                var dataDto = Encoding.UTF8.GetString(sizeBytes);
-                var data = JsonConvert.DeserializeObject<Dto>(dataDto);
-                if (data != null && data.Data != null)
+                lock (_lock)
                 {
-                    lock (_lock)
+                    byte[] sizeBytes = new byte[1024 * 100];
+
+                    client.Receive(sizeBytes);
+                    var dataDto = Encoding.UTF8.GetString(sizeBytes);
+                    var data = JsonConvert.DeserializeObject<Dto>(dataDto);
+                    if (data != null && data.Data != null)
                     {
                         MemoryStream memoryStream = new(data.Data);
-                        Image img = Image.FromStream(memoryStream, true, false);
+                        Image img = (Image) Image.FromStream(memoryStream, true, false).Clone();
                         imgBox.Image = img;
-                    }
 
+                        memoryStream.Close();
+
+                    }
                 }
             }
+
         }
 
         private async void CanselBtn_Click(object sender, EventArgs e)
@@ -103,11 +109,10 @@ namespace AdminEmulator
             await serv.DisconnectAsync(false);
             serv.Close();
 
-            lock (_lock)
-            {
-                IsCansel = true;
+           
+             IsCansel = true;
 
-            }
+             
         }
     }
 }

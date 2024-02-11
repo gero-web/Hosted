@@ -1,29 +1,29 @@
 ﻿
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Core.Interfases;
 using Host.Interface;
-using Host.Model;
 using Newtonsoft.Json;
 namespace Host.Services
 {
     public class SenderService : ISenderService
     {
         private Socket _socket;
+        private readonly ICastsImages castsImages;
         private string IpClient = null!;
         private object _lock = new object();
         private Thread _threadSendImg;
 
         public bool Cansel { get; private set; }
 
-        public SenderService()
+        public SenderService(ICastsImages castsImages)
         {
 
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
                                  ProtocolType.Udp);
             InitTheard();
+            this.castsImages = castsImages;
         }
 
         private void InitTheard()
@@ -55,7 +55,7 @@ namespace Host.Services
                 var n = 18;
                 for (int i = 0; i < n; i++)
                 {
-                    var dto = GetDataAndSize(i);
+                    var dto =  castsImages.GetDataAndSize(i);
                     var data = JsonConvert.SerializeObject(dto);
                     var buffer = Encoding.UTF8.GetBytes(data);
                     _socket.SendTo(buffer, ip);
@@ -93,35 +93,9 @@ namespace Host.Services
             {
                 lock (_lock)
                 {
-                    Cansel = true;
-                    
+                    Cansel = true; 
                 }
             }
-
-        }
-
-        private static Dto GetBitData(int size, byte[] data)
-        {
-            var dto = new Dto()
-            {
-                Size = size,
-                Data = data,
-            };
-
-            return dto;
-        }
-
-        private static Dto GetDataAndSize(int i)
-        {
-
-            MemoryStream ms = new();
-            var path = $"img/{i}/{i}-0000.jpg";
-            Bitmap bmp = new(path);
-            bmp.Save(ms, ImageFormat.Jpeg);
-            bmp.Dispose();
-            var data = ms.ToArray();
-            ms.Close();
-            return GetBitData(data.Length, data);
 
         }
     }

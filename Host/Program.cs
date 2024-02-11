@@ -1,12 +1,29 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Core;
 using Host.Interface;
 using Host.Services;
+using Microsoft.Extensions.DependencyInjection;
 
-ISenderService serv = new SenderService();
-var conn = new ConnectionService(serv);
+IServiceCollection services = new ServiceCollection();
+services.AddCoreServise();
 
-await conn.ServerWorker();
+services.AddTransient<ISenderService, SenderService>(); 
+
+var provider = services.BuildServiceProvider();
+var scopeFactory = provider.GetService<IServiceScopeFactory>();
+
+using (var scope = scopeFactory.CreateScope())
+{
+    var serv = scope.ServiceProvider.GetService<ISenderService>();
+    var conn = new ConnectionService(serv);
+    await conn.ServerWorker();
+}
+
+
+ 
+
+
 
 
 

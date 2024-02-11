@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace Host.Model
+namespace Host.ValueObjects
 {
     public class Dto
     {
