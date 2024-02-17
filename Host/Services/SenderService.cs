@@ -58,11 +58,11 @@ namespace Host.Services
                 var buffer = Encoding.UTF8.GetBytes(data);
                 var byteSize = BitConverter.GetBytes(buffer.Length); 
                 _socket.SendTo(byteSize, ip);
-                int count = 0;
+                
                 int byteToSend = 0;
                 while (byteToSend < buffer.Length)
                 {
-                    count++;
+                    
                     var sendByte = buffer.Skip(byteToSend)
                                          .Take(256)
                                          .ToArray();

@@ -87,10 +87,10 @@ namespace AdminEmulator
                     var reciveSize = 0;
                     var sizeBytesToImge = new List<byte>();
                     sizeBytes = new byte[256];
-                    int count = 0;
+                   
                     while (reciveSize < size)
                     {
-                        count++;
+                       
                         var recive = client.Receive(sizeBytes);
                         sizeBytesToImge.AddRange(sizeBytes.Take(recive));
 
