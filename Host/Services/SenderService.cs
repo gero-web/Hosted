@@ -1,4 +1,4 @@
-﻿
+﻿ 
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -52,16 +52,24 @@ namespace Host.Services
             var ip = new IPEndPoint(ipHost, port);
             while (!Cansel)
             {
-                var n = 18;
-                for (int i = 0; i < n; i++)
-                {
-                    var dto =  castsImages.GetDataAndSize(i);
-                    var data = JsonConvert.SerializeObject(dto);
-                    var buffer = Encoding.UTF8.GetBytes(data);
-                    _socket.SendTo(buffer, ip);
- 
-                }
 
+                var dto = castsImages.GetDataAndSize();
+                var data = JsonConvert.SerializeObject(dto);
+                var buffer = Encoding.UTF8.GetBytes(data);
+                var byteSize = BitConverter.GetBytes(buffer.Length); 
+                _socket.SendTo(byteSize, ip);
+                int count = 0;
+                int byteToSend = 0;
+                while (byteToSend < buffer.Length)
+                {
+                    count++;
+                    var sendByte = buffer.Skip(byteToSend)
+                                         .Take(256)
+                                         .ToArray();
+                    byteToSend += _socket.SendTo(sendByte, ip);
+                }
+                //Выделяем время перед следующей отправкой
+                Thread.Sleep(200);
             }
 
         }
@@ -93,7 +101,7 @@ namespace Host.Services
             {
                 lock (_lock)
                 {
-                    Cansel = true; 
+                    Cansel = true;
                 }
             }
 

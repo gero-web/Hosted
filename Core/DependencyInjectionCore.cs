@@ -9,6 +9,7 @@ namespace Core
         public static void AddCoreServise(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<ICastsImages, CastsImages>();
+            serviceCollection.AddTransient<IScreenShotService, ScreenShotService>();
         }
     }
 }

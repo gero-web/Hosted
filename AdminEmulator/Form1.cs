@@ -1,10 +1,9 @@
 using System.Net.Sockets;
 using System.Net;
-using System.Drawing;
 using System.Text;
-
 using Host.Model;
 using Newtonsoft.Json;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace AdminEmulator
 {
@@ -81,24 +80,44 @@ namespace AdminEmulator
             {
                 lock (_lock)
                 {
-                    byte[] sizeBytes = new byte[1024 * 100];
+                    byte[] sizeBytes = new byte[256];
 
                     client.Receive(sizeBytes);
-                    var dataDto = Encoding.UTF8.GetString(sizeBytes);
-                    var data = JsonConvert.DeserializeObject<Dto>(dataDto);
-                    if (data != null && data.Data != null)
+                    var size = BitConverter.ToInt32(sizeBytes, 0);
+                    var reciveSize = 0;
+                    var sizeBytesToImge = new List<byte>();
+                    sizeBytes = new byte[256];
+                    int count = 0;
+                    while (reciveSize < size)
                     {
-                        MemoryStream memoryStream = new(data.Data);
-                        Image img = (Image) Image.FromStream(memoryStream, true, false).Clone();
-                        imgBox.Image = img;
+                        count++;
+                        var recive = client.Receive(sizeBytes);
+                        sizeBytesToImge.AddRange(sizeBytes.Take(recive));
 
-                        memoryStream.Close();
-
+                        reciveSize += recive;
                     }
+                    var arrayBytes = sizeBytesToImge.ToArray();
+                    var dataDto = Encoding.UTF8.GetString(arrayBytes);
+                    if (dataDto != null)
+                    {
+                        var data = JsonConvert.DeserializeObject<Dto>(dataDto);
+                        if (data != null && data.Data != null)
+                        {
+                            MemoryStream memoryStream = new(data.Data);
+                            Image img = (Image)Image.FromStream(memoryStream, true, false).Clone();
+                            imgBox.Image = img;
+
+                            memoryStream.Close();
+
+                        }
+                    }
+
                 }
             }
 
         }
+
+
 
         private async void CanselBtn_Click(object sender, EventArgs e)
         {
@@ -109,10 +128,10 @@ namespace AdminEmulator
             await serv.DisconnectAsync(false);
             serv.Close();
 
-           
-             IsCansel = true;
 
-             
+            IsCansel = true;
+
+
         }
     }
 }

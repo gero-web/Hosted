@@ -1,12 +1,21 @@
 ﻿using Host.ValueObjects;
 using Core.Interfases;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 
 namespace Core.Servises
 {
     public class CastsImages : ICastsImages
     {
-        public Dto CreateDto(int size, byte[] data)
+        private readonly IScreenShotService screenShotService;
+
+        public CastsImages(IScreenShotService screenShotService)
+        {
+            this.screenShotService = screenShotService;
+        }
+     
+        private Dto CreateDto(int size, byte[] data)
         {
             var dto = new Dto()
             {
@@ -17,13 +26,10 @@ namespace Core.Servises
             return dto;
         }
 
-        public Dto GetDataAndSize(int i)
+        public Dto GetDataAndSize()
         {
-
-            var path = $"img/{i}/{i}-0000.jpg";
-            var byteArray = File.ReadAllBytes(path);
-
-            return CreateDto(byteArray.Length, byteArray);
+            var bmpByte = screenShotService.GetScreenByByteArray();
+            return CreateDto(bmpByte.Length, bmpByte);
 
         }
     }
