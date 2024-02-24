@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Core;
-using Core.Interfases;
 using Host.Interface;
 using Host.Services;
 using Microsoft.Extensions.DependencyInjection;

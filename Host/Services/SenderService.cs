@@ -1,5 +1,4 @@
-﻿
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Core.Interfases;
@@ -14,29 +13,18 @@ namespace Host.Services
         private string IpClient = null!;
         private readonly IPool pool;
         private object _lock = new object();
-
-
         public bool Cansel { get; private set; }
 
         public SenderService(ICastsImages castsImages, IPool pool)
         {
-
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
                                  ProtocolType.Udp);
             this.castsImages = castsImages;
             this.pool = pool;
         }
 
-        private void InitTheard()
-        {
-
-            
-
-        }
-
         private void SendingImg(IPAddress ipHost, int port = 8889)
         {
-
             var ip = new IPEndPoint(ipHost, port);
             while (!Cansel)
             {
@@ -59,10 +47,8 @@ namespace Host.Services
                 //Выделяем время перед следующей отправкой
                 Thread.Sleep(200);
             }
-
         }
-
-
+         
         public void StartSending(string ipConnectedTo)
         {
             lock (_lock)

@@ -1,6 +1,4 @@
-﻿
-
-namespace Host.Interface
+﻿namespace Host.Interface
 {
     public interface ISenderService
     {

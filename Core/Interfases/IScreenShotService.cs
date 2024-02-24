@@ -1,5 +1,4 @@
-﻿
-namespace Core.Interfases
+﻿namespace Core.Interfases
 {
     public interface IScreenShotService
     {

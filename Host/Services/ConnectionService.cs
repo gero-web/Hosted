@@ -1,5 +1,4 @@
-﻿
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Host.Interface;
 using System.Net;
 using System.Net.Sockets;
@@ -25,14 +24,12 @@ namespace Host.Services
         public async Task ServerWorker()
         {
             await CommadnsHandlers();
-
         }
 
         private async Task CommadnsHandlers()
         {
             bool work = true;
-
-
+             
             while (work)
             {
                 var client = await _socketServer.AcceptAsync();
@@ -48,8 +45,7 @@ namespace Host.Services
                     await client.SendAsync(answerBytes);
                     if (answer == 1)
                     {
- 
-                        var ipHostToConnected = (client.RemoteEndPoint as IPEndPoint)
+                        var ipHostToConnected = (client.RemoteEndPoint as IPEndPoint)?
                                                  .Address
                                                  .ToString()
                             ?? throw new Exception("Что то пошло нетак");
@@ -65,7 +61,6 @@ namespace Host.Services
                 }
 
                 await client.DisconnectAsync(false);
-
             }
 
             [DllImport("User32.dll", CharSet = CharSet.Unicode)]
