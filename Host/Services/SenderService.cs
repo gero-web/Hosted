@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,37 +12,25 @@ namespace Host.Services
         private Socket _socket;
         private readonly ICastsImages castsImages;
         private string IpClient = null!;
+        private readonly IPool pool;
         private object _lock = new object();
-        private Thread _threadSendImg;
+
 
         public bool Cansel { get; private set; }
 
-        public SenderService(ICastsImages castsImages)
+        public SenderService(ICastsImages castsImages, IPool pool)
         {
 
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
                                  ProtocolType.Udp);
-            InitTheard();
             this.castsImages = castsImages;
+            this.pool = pool;
         }
 
         private void InitTheard()
         {
 
-            _threadSendImg = new(() =>
-            {
-                if (IpClient != null)
-                {
-                    SendingImg(IPAddress.Parse(IpClient));
-                }
-                else
-                {
-                    throw new Exception("Ip клиента не было предоставлено.");
-                }
-            })
-            {
-                IsBackground = true
-            };
+            
 
         }
 
@@ -56,13 +44,13 @@ namespace Host.Services
                 var dto = castsImages.GetDataAndSize();
                 var data = JsonConvert.SerializeObject(dto);
                 var buffer = Encoding.UTF8.GetBytes(data);
-                var byteSize = BitConverter.GetBytes(buffer.Length); 
+                var byteSize = BitConverter.GetBytes(buffer.Length);
                 _socket.SendTo(byteSize, ip);
-                
+
                 int byteToSend = 0;
                 while (byteToSend < buffer.Length)
                 {
-                    
+
                     var sendByte = buffer.Skip(byteToSend)
                                          .Take(256)
                                          .ToArray();
@@ -77,34 +65,25 @@ namespace Host.Services
 
         public void StartSending(string ipConnectedTo)
         {
-
-            if (!_threadSendImg.IsAlive)
+            lock (_lock)
             {
-                lock (_lock)
+                IpClient = ipConnectedTo;
+                Cansel = false;
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
+                         ProtocolType.Udp);
+                pool.SetTask(parm =>
                 {
-                    IpClient = ipConnectedTo;
-                    Cansel = false;
-                    _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
-                             ProtocolType.Udp);
-
-                    InitTheard();
-                    _threadSendImg.Start();
-                }
+                    SendingImg(IPAddress.Parse(IpClient));
+                });
             }
-
         }
 
         public void Disconect()
         {
-
-            if (_threadSendImg.IsAlive)
+            lock (_lock)
             {
-                lock (_lock)
-                {
-                    Cansel = true;
-                }
+                Cansel = true;
             }
-
         }
     }
 }
