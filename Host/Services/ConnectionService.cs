@@ -2,6 +2,7 @@
 using Host.Interface;
 using System.Net;
 using System.Net.Sockets;
+using System.Windows.Forms;
 
 namespace Host.Services
 {
@@ -29,7 +30,7 @@ namespace Host.Services
         private async Task CommadnsHandlers()
         {
             bool work = true;
-             
+
             while (work)
             {
                 var client = await _socketServer.AcceptAsync();
@@ -45,15 +46,18 @@ namespace Host.Services
                     await client.SendAsync(answerBytes);
                     if (answer == 1)
                     {
+                        var (width, height) = GetByteSizeWindowPrimary();
+
+                        await client.SendAsync(width);
+                        await client.SendAsync(height);
+
                         var ipHostToConnected = (client.RemoteEndPoint as IPEndPoint)?
                                                  .Address
                                                  .ToString()
                             ?? throw new Exception("Что то пошло нетак");
 
                         senderService.StartSending(ipHostToConnected);
-                         
                     }
-
                 }
                 else
                 {
@@ -65,6 +69,17 @@ namespace Host.Services
 
             [DllImport("User32.dll", CharSet = CharSet.Unicode)]
             static extern int MessageBox(IntPtr hWind, string msg, string caption, int type);
+        }
+
+        private static (byte[] width, byte[] height) GetByteSizeWindowPrimary()
+        {
+            var width = Screen.PrimaryScreen.Bounds.Width;
+            var height = Screen.PrimaryScreen.Bounds.Height;
+           
+            var bytesWidth= BitConverter.GetBytes(width);
+            var bytesHeight= BitConverter.GetBytes(height);
+
+            return (bytesWidth, bytesHeight);
         }
     }
 }

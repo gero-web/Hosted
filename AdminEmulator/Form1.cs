@@ -1,9 +1,9 @@
-using System.Net.Sockets;
-using System.Net;
-using System.Text;
 using Host.Model;
 using Newtonsoft.Json;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 namespace AdminEmulator
 {
@@ -11,6 +11,9 @@ namespace AdminEmulator
     {
         Socket serv { get; set; }
         Socket client { get; set; }
+        double screenClentWidth = 1;
+        double screenClentHeight = 1;
+
         private object _lock = new object();
 
         public bool IsCansel { get; private set; } = false;
@@ -18,7 +21,6 @@ namespace AdminEmulator
         public Form1()
         {
             InitializeComponent();
-
 
             client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
                             ProtocolType.Udp);
@@ -30,11 +32,20 @@ namespace AdminEmulator
         private async void SendBtn_Click(object sender, EventArgs e)
         {
             await InitSocket();
+            var byteWidth =new byte[10];
+            var byteHeigth =new byte[10];
+            var answerBuff = new byte[10];
+          
             var buffer = BitConverter.GetBytes(true);
             serv.Send(buffer);
-            var answerBuff = new Byte[10];
             serv.Receive(answerBuff);
             var answer = BitConverter.ToInt32(answerBuff, 0);
+            serv.Receive(byteWidth);
+            serv.Receive(byteHeigth);
+           
+            screenClentWidth = BitConverter.ToInt32(byteWidth, 0);
+            screenClentHeight = BitConverter.ToInt32(byteHeigth, 0);
+
             await serv.DisconnectAsync(false);
             serv.Close();
 
@@ -87,10 +98,10 @@ namespace AdminEmulator
                     var reciveSize = 0;
                     var sizeBytesToImge = new List<byte>();
                     sizeBytes = new byte[256];
-                   
+
                     while (reciveSize < size)
                     {
-                       
+
                         var recive = client.Receive(sizeBytes);
                         sizeBytesToImge.AddRange(sizeBytes.Take(recive));
 
@@ -105,7 +116,10 @@ namespace AdminEmulator
                         {
                             MemoryStream memoryStream = new(data.Data);
                             Image img = (Image)Image.FromStream(memoryStream, true, false).Clone();
-                            imgBox.Image = img;
+                            imgBox.BeginInvoke(() =>
+                            {
+                                imgBox.Image = img;
+                            });
 
                             memoryStream.Close();
 
@@ -127,11 +141,30 @@ namespace AdminEmulator
             serv.Send(buffer);
             await serv.DisconnectAsync(false);
             serv.Close();
-
-
             IsCansel = true;
+             
+        }
 
+        private void imgBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            var x = e.X;
+            var y = e.Y;
+            var widthImgBox = imgBox.Width;
+            var heightImgBox = imgBox.Height;
+            double scaleWidth, scaleHeight;
 
+            ScreenScaleCalculation(widthImgBox, heightImgBox, out scaleWidth, out scaleHeight);
+
+            Debug.Print($"{x} -- {y} -- {scaleWidth} -- " +
+                $"{scaleHeight} ");
+
+        }
+
+        private void ScreenScaleCalculation(int widthImgBox, int heightImgBox, out double scaleWidth, out double scaleHeight)
+        {
+            
+            scaleWidth = Math.Round(screenClentWidth / widthImgBox, 4);
+            scaleHeight = Math.Round(screenClentHeight / heightImgBox, 4);
         }
     }
 }
