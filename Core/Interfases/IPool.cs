@@ -2,6 +2,6 @@
 {
     public interface IPool
     {
-        void SetTask(Action<object?> task);
+        void SetTask(Action<object?> task, CancellationToken cancellationToken);
     }
 }
